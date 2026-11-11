@@ -1,3 +1,153 @@
+<script setup></script>
+
+<script>
+export default {
+  name: 'UserManager',
+  data() {
+    return {
+      backendPort: import.meta.env.BACKEND_PORT || 3000,
+      frontendPort: import.meta.env.FRONTEND_PORT || 5173,
+      apiStatus: 'checking', // 'online' | 'offline' | 'checking'
+      apiHealth: null,
+      users: [],
+      loading: false,
+      errorMessage: '',
+      successMessage: '',
+      newUser: {
+        name: '',
+        email: '',
+      },
+      editingUser: null,
+    }
+  },
+  computed: {
+    userCount() {
+      return this.users.length
+    },
+    isFormValid() {
+      return Boolean(this.newUser.email && this.newUser.email.trim())
+    },
+    isOnline() {
+      return this.apiStatus === 'online'
+    },
+  },
+  mounted() {
+    this.checkHealth()
+  },
+  methods: {
+    async checkHealth() {
+      try {
+        const res = await fetch('/api/health')
+        if (res.ok) {
+          this.apiHealth = await res.json()
+          this.apiStatus = 'online'
+          this.fetchUsers()
+        } else {
+          this.apiStatus = 'offline'
+        }
+      } catch (err) {
+        this.apiStatus = 'offline'
+        console.error('Health check failed:', err)
+      }
+    },
+    async fetchUsers() {
+      this.loading = true
+      this.errorMessage = ''
+      try {
+        const res = await fetch('/api/users')
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || `HTTP error ${res.status}`)
+        }
+        this.users = await res.json()
+      } catch (err) {
+        this.errorMessage = `Unable to fetch users: ${err.message}. If MySQL is not running, run 'npm run docker:db' or start your MySQL instance and run 'npm run db:push'.`
+      } finally {
+        this.loading = false
+      }
+    },
+    async createUser() {
+      if (!this.isFormValid) return
+      this.errorMessage = ''
+      this.successMessage = ''
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.newUser),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to create user')
+        }
+
+        this.successMessage = 'User created successfully!'
+        this.newUser = { name: '', email: '' }
+        await this.fetchUsers()
+      } catch (err) {
+        this.errorMessage = err.message
+      }
+    },
+    startEdit(user) {
+      this.editingUser = { ...user }
+    },
+    cancelEdit() {
+      this.editingUser = null
+    },
+    async updateUser() {
+      if (!this.editingUser) return
+      this.errorMessage = ''
+      this.successMessage = ''
+
+      try {
+        const res = await fetch(`/api/users/${this.editingUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: this.editingUser.name,
+            email: this.editingUser.email,
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to update user')
+        }
+
+        this.successMessage = 'User updated successfully!'
+        this.editingUser = null
+        await this.fetchUsers()
+      } catch (err) {
+        this.errorMessage = err.message
+      }
+    },
+    async deleteUser(id) {
+      if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to delete this user?')) return
+      this.errorMessage = ''
+      this.successMessage = ''
+
+      try {
+        const res = await fetch(`/api/users/${id}`, {
+          method: 'DELETE',
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to delete user')
+        }
+
+        this.successMessage = 'User deleted successfully!'
+        await this.fetchUsers()
+      } catch (err) {
+        this.errorMessage = err.message
+      }
+    },
+  },
+}
+</script>
+
 <template>
   <div id="users-section" class="w-full rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-900/90">
     <!-- Header / Stack Diagnostic Bar -->
@@ -233,151 +383,3 @@
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  name: 'UserManager',
-  data() {
-    return {
-      backendPort: import.meta.env.BACKEND_PORT || 3000,
-      frontendPort: import.meta.env.FRONTEND_PORT || 5173,
-      apiStatus: 'checking', // 'online' | 'offline' | 'checking'
-      apiHealth: null,
-      users: [],
-      loading: false,
-      errorMessage: '',
-      successMessage: '',
-      newUser: {
-        name: '',
-        email: '',
-      },
-      editingUser: null,
-    }
-  },
-  computed: {
-    userCount() {
-      return this.users.length
-    },
-    isFormValid() {
-      return Boolean(this.newUser.email && this.newUser.email.trim())
-    },
-    isOnline() {
-      return this.apiStatus === 'online'
-    },
-  },
-  mounted() {
-    this.checkHealth()
-  },
-  methods: {
-    async checkHealth() {
-      try {
-        const res = await fetch('/api/health')
-        if (res.ok) {
-          this.apiHealth = await res.json()
-          this.apiStatus = 'online'
-          this.fetchUsers()
-        } else {
-          this.apiStatus = 'offline'
-        }
-      } catch (err) {
-        this.apiStatus = 'offline'
-        console.error('Health check failed:', err)
-      }
-    },
-    async fetchUsers() {
-      this.loading = true
-      this.errorMessage = ''
-      try {
-        const res = await fetch('/api/users')
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || `HTTP error ${res.status}`)
-        }
-        this.users = await res.json()
-      } catch (err) {
-        this.errorMessage = `Unable to fetch users: ${err.message}. If MySQL is not running, run 'npm run docker:db' or start your MySQL instance and run 'npm run db:push'.`
-      } finally {
-        this.loading = false
-      }
-    },
-    async createUser() {
-      if (!this.isFormValid) return
-      this.errorMessage = ''
-      this.successMessage = ''
-
-      try {
-        const res = await fetch('/api/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.newUser),
-        })
-
-        const data = await res.json()
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to create user')
-        }
-
-        this.successMessage = 'User created successfully!'
-        this.newUser = { name: '', email: '' }
-        await this.fetchUsers()
-      } catch (err) {
-        this.errorMessage = err.message
-      }
-    },
-    startEdit(user) {
-      this.editingUser = { ...user }
-    },
-    cancelEdit() {
-      this.editingUser = null
-    },
-    async updateUser() {
-      if (!this.editingUser) return
-      this.errorMessage = ''
-      this.successMessage = ''
-
-      try {
-        const res = await fetch(`/api/users/${this.editingUser.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: this.editingUser.name,
-            email: this.editingUser.email,
-          }),
-        })
-
-        const data = await res.json()
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to update user')
-        }
-
-        this.successMessage = 'User updated successfully!'
-        this.editingUser = null
-        await this.fetchUsers()
-      } catch (err) {
-        this.errorMessage = err.message
-      }
-    },
-    async deleteUser(id) {
-      if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to delete this user?')) return
-      this.errorMessage = ''
-      this.successMessage = ''
-
-      try {
-        const res = await fetch(`/api/users/${id}`, {
-          method: 'DELETE',
-        })
-
-        const data = await res.json()
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to delete user')
-        }
-
-        this.successMessage = 'User deleted successfully!'
-        await this.fetchUsers()
-      } catch (err) {
-        this.errorMessage = err.message
-      }
-    },
-  },
-}
-</script>

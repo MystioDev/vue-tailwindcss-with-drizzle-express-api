@@ -1,3 +1,31 @@
+<script setup></script>
+
+<script>
+export default {
+  name: 'HelloWorld',
+  props: {
+    title: {
+      type: String,
+      required: true,
+    },
+    subtitle: {
+      type: String,
+      default: '',
+    },
+  },
+  data() {
+    return {
+      count: 0,
+    }
+  },
+  methods: {
+    incrementCount() {
+      this.count++
+    },
+  },
+}
+</script>
+
 <template>
   <section class="mx-auto max-w-3xl text-center">
     <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
@@ -31,29 +59,3 @@
     </div>
   </section>
 </template>
-
-<script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    title: {
-      type: String,
-      required: true,
-    },
-    subtitle: {
-      type: String,
-      default: '',
-    },
-  },
-  data() {
-    return {
-      count: 0,
-    }
-  },
-  methods: {
-    incrementCount() {
-      this.count++
-    },
-  },
-}
-</script>

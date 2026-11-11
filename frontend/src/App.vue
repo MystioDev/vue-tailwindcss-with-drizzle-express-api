@@ -1,3 +1,51 @@
+<script setup>
+import HelloWorld from './components/HelloWorld.vue'
+import UserManager from './components/UserManager.vue'
+</script>
+
+<script>
+export default {
+  name: 'App',
+  data() {
+    return {
+      features: [
+        {
+          title: 'Simplified Single .env',
+          description: 'A minimal 7-line environment file syncs ports and database configuration across Vite, Express, Drizzle, and Docker.',
+          badge: 'Unified Config',
+        },
+        {
+          title: 'Bidirectional Port Pairing',
+          description: 'Frontend dev proxy syncs to BACKEND_PORT, while Express CORS automatically authorizes FRONTEND_PORT.',
+          badge: 'Auto-Synced Ports',
+        },
+        {
+          title: 'Vue 3 Options API',
+          description: 'Classic, familiar Options API (data, methods, mounted, props) combined with Tailwind CSS v4 styling.',
+          badge: 'Options API',
+        },
+        {
+          title: 'Drizzle ORM & MySQL',
+          description: 'Type-safe SQL schemas, automatic migrations, connection pooling via mysql2, and Drizzle Studio support.',
+          badge: 'Drizzle ORM',
+        },
+        {
+          title: 'Express 5 REST API',
+          description: 'Clean REST API routing, dynamic CORS resolution from FRONTEND_PORT, JSON handling, and health check endpoints.',
+          badge: 'Express v5',
+        },
+        {
+          title: 'Zero-Config Docker Compose',
+          description: 'Every container reads the exact same root .env file, with automatic Nginx proxy templating and MySQL healthchecks.',
+          badge: 'Docker Ready',
+        },
+      ],
+    }
+  },
+}
+</script>
+
+
 <template>
   <div class="flex min-h-dvh flex-col justify-between px-6 py-10 sm:px-8 lg:px-12">
     <!-- Navigation Header -->
@@ -132,52 +180,3 @@
     </footer>
   </div>
 </template>
-
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-import UserManager from './components/UserManager.vue'
-
-export default {
-  name: 'App',
-  components: {
-    HelloWorld,
-    UserManager,
-  },
-  data() {
-    return {
-      features: [
-        {
-          title: 'Simplified Single .env',
-          description: 'A minimal 7-line environment file syncs ports and database configuration across Vite, Express, Drizzle, and Docker.',
-          badge: 'Unified Config',
-        },
-        {
-          title: 'Bidirectional Port Pairing',
-          description: 'Frontend dev proxy syncs to BACKEND_PORT, while Express CORS automatically authorizes FRONTEND_PORT.',
-          badge: 'Auto-Synced Ports',
-        },
-        {
-          title: 'Vue 3 Options API',
-          description: 'Classic, familiar Options API (data, methods, mounted, props) combined with Tailwind CSS v4 styling.',
-          badge: 'Options API',
-        },
-        {
-          title: 'Drizzle ORM & MySQL',
-          description: 'Type-safe SQL schemas, automatic migrations, connection pooling via mysql2, and Drizzle Studio support.',
-          badge: 'Drizzle ORM',
-        },
-        {
-          title: 'Express 5 REST API',
-          description: 'Clean REST API routing, dynamic CORS resolution from FRONTEND_PORT, JSON handling, and health check endpoints.',
-          badge: 'Express v5',
-        },
-        {
-          title: 'Zero-Config Docker Compose',
-          description: 'Every container reads the exact same root .env file, with automatic Nginx proxy templating and MySQL healthchecks.',
-          badge: 'Docker Ready',
-        },
-      ],
-    }
-  },
-}
-</script>
