@@ -1,0 +1,70 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: fullstack-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_DATABASE: ${DB_NAME:-express_drizzle_db}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fullstack-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:-3000}
+      BACKEND_PORT: ${BACKEND_PORT:-3000}
+      FRONTEND_PORT: ${FRONTEND_PORT:-5173}
+      DATABASE_URL: mysql://${DB_USER:-root}:${DB_PASSWORD:-password}@mysql:3306/${DB_NAME:-express_drizzle_db}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-express_drizzle_db}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+    ports:
+      - "${BACKEND_PORT:-3000}:${BACKEND_PORT:-3000}"
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:${BACKEND_PORT:-3000}
+    container_name: fullstack-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+
