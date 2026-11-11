@@ -10,6 +10,7 @@ dotenv.config();
 const usersRouter = require("./routes/users");
 
 const app = express();
+const PROJECT_NAME = process.env.PROJECT_NAME || "fullstack";
 const PORT = process.env.BACKEND_PORT || process.env.PORT || 3000;
 const FRONTEND_PORT = process.env.FRONTEND_PORT || 5173;
 
@@ -65,6 +66,7 @@ app.use(express.json());
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
+    projectName: PROJECT_NAME,
     message: "Express API is healthy and operational",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
@@ -87,7 +89,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`==============================================`);
-  console.log(`🚀 Express API running on http://localhost:${PORT}`);
+  console.log(`🚀 [${PROJECT_NAME}] Express API running on http://localhost:${PORT}`);
   console.log(`🌐 CORS enabled for Frontend Port: ${FRONTEND_PORT}`);
   console.log(`🩺 Health check: http://localhost:${PORT}/api/health`);
   console.log(`==============================================`);

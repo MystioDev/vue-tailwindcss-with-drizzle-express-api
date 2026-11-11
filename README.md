@@ -26,6 +26,7 @@ Designed from the ground up with a **shared root `.env` configuration**, **bidir
 - [REST API Reference](#-rest-api-reference)
 - [Frontend Development (Vue 3 + Tailwind v4)](#-frontend-development-vue-3--tailwind-v4)
 - [Docker Compose Setup (Optional Containerization)](#-docker-compose-setup-optional-containerization)
+- [Deploying to a VPS (Production Hosting)](#-deploying-to-a-vps-production-hosting)
 - [NPM Scripts Reference](#-npm-scripts-reference)
 - [Troubleshooting & FAQ](#-troubleshooting--faq)
 
@@ -57,7 +58,7 @@ vue-tailwindcss-with-drizzle-express-api/
 ├── docker-compose.yml        # Multi-container orchestration (MySQL, backend, frontend)
 ├── package.json              # Root npm workspace scripts (dev, build, db, docker)
 ├── scripts/
-│   └── dev.js                # Cross-platform concurrent dev runner (zero external dependencies)
+│   └── docker-db.js          # Cross-platform Docker database migration & CLI runner
 ├── backend/                  # Express 5 REST API + Drizzle ORM
 │   ├── .dockerignore         # Backend Docker ignore rules
 │   ├── Dockerfile            # Production Node.js Alpine container
@@ -114,6 +115,7 @@ Changing `BACKEND_PORT=4000` and `FRONTEND_PORT=8080` in `.env` automatically al
 
 | Variable | Default Value | Description |
 |---|---|---|
+| `PROJECT_NAME` | `fullstack` | Prefix for Docker containers (`<PROJECT_NAME>-backend`, etc.), compose project, and networks |
 | `BACKEND_PORT` / `PORT` | `3000` | Port where the Express API server listens |
 | `FRONTEND_PORT` | `5173` | Port where Vite dev server runs or host port for frontend container |
 | `CORS_ORIGIN` | `http://localhost:5173` | Allowed CORS origin for backend requests |
@@ -175,13 +177,24 @@ Synchronize the database schema to your MySQL instance:
 npm run db:push
 ```
 
-#### 5. Start Frontend and Backend Concurrently
+#### 5. Start Frontend and Backend
 
-Run both the Express API and Vite frontend dev servers together:
+- **Option A: One-Command Full Stack with Docker**
+  To run the entire application (MySQL, Express API, and Vue SPA) with a single command:
+  ```bash
+  npm run docker:up
+  ```
 
-```bash
-npm run dev
-```
+- **Option B: Local Development in Separate Terminals**
+  For local development outside Docker, run each server in its own terminal window:
+  - **Terminal 1 (Express API):**
+    ```bash
+    npm run dev:backend
+    ```
+  - **Terminal 2 (Vite Frontend):**
+    ```bash
+    npm run dev:frontend
+    ```
 
 Open your browser to:
 - **Frontend App:** [http://localhost:5173](http://localhost:5173)
@@ -334,9 +347,148 @@ npm run docker:logs
 npm run docker:down
 # or: docker compose down
 
-# Start ONLY the MySQL database (for local npm run dev workflows)
+# Start ONLY the MySQL database (for local development workflows)
 npm run docker:db
 # or: docker compose up -d mysql
+```
+
+---
+
+## 🚀 Deploying to a VPS (Production Hosting)
+
+Hosting this full-stack application on a Virtual Private Server (VPS) such as **Hetzner, DigitalOcean, Linode, AWS EC2, or Vultr** takes just a few minutes using the containerized Docker setup.
+
+### 1. Provision Your Server & Install Docker
+
+1. Create an **Ubuntu 22.04 or 24.04 LTS** VPS instance.
+2. Connect to your VPS via SSH:
+   ```bash
+   ssh root@your_server_ip
+   ```
+3. Install Docker and the Docker Compose plugin (official one-liner):
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   ```
+4. (Optional) Configure basic firewall rules with UFW:
+   ```bash
+   ufw allow OpenSSH
+   ufw allow 80/tcp
+   ufw allow 443/tcp
+   ufw enable
+   ```
+
+---
+
+### 2. Clone Your Project & Configure Production Environment
+
+1. Clone your application repository to the server:
+   ```bash
+   git clone https://github.com/your-username/your-repo.git /opt/app
+   cd /opt/app
+   ```
+
+2. Create your production `.env` file:
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+
+3. Update the production values in `.env`:
+   ```ini
+   # Project identifier
+   PROJECT_NAME=production-app
+
+   # Ports
+   BACKEND_PORT=3000
+   FRONTEND_PORT=5173
+
+   # Strong production MySQL credentials
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=app_user
+   DB_PASSWORD=YOUR_STRONG_SECURE_PASSWORD_HERE
+   DB_NAME=production_db
+   ```
+
+> [!TIP]
+> Keep `DB_PORT=3306` unexposed publicly on your VPS firewall (`ufw status`). Containers communicate securely through the internal Docker bridge network (`app-network`).
+
+---
+
+### 3. Launch the Stack & Initialize Database
+
+1. Build and start all 3 containers (MySQL, Express API, and Nginx Vue SPA) in the background:
+   ```bash
+   npm run docker:up
+   # or: docker compose up -d --build
+   ```
+
+2. Push your Drizzle database schema to the production database:
+   ```bash
+   npm run docker:db:push
+   # or apply versioned SQL migrations:
+   # npm run docker:db:migrate
+   ```
+
+3. Verify all containers are healthy and operational:
+   ```bash
+   docker compose ps
+   npm run docker:logs
+   ```
+
+---
+
+### 4. Set Up Domain & Free SSL (HTTPS) with Reverse Proxy
+
+For a production website with a custom domain (e.g. `example.com`), route traffic through a host reverse proxy that provides **free automated SSL certificates from Let's Encrypt**.
+
+#### Recommended: Caddy (Easiest, Automated SSL)
+
+[Caddy](https://caddyserver.com/) automatically obtains and renews SSL certificates with zero manual cron jobs:
+
+1. Install Caddy on your VPS:
+   ```bash
+   sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+   sudo apt update && sudo apt install -y caddy
+   ```
+
+2. Point your domain's **DNS A record** to your VPS IP address in your DNS provider (e.g. Cloudflare, Namecheap).
+
+3. Edit `/etc/caddy/Caddyfile`:
+   ```caddyfile
+   example.com, www.example.com {
+       reverse_proxy localhost:5173
+   }
+   ```
+
+4. Reload Caddy:
+   ```bash
+   sudo systemctl reload caddy
+   ```
+
+Your full-stack application is now live at `https://example.com` with automated HTTPS, HTTP/2, and security headers.
+
+---
+
+### 5. Routine Operations & Continuous Deployment (CI/CD)
+
+Whenever you push updates to your main git branch, update your production VPS with:
+
+```bash
+cd /opt/app
+git pull origin main
+npm run docker:up
+npm run docker:db:migrate
+```
+
+#### Automated Database Backups (Cron Job)
+Add a daily cron job to back up your MySQL data:
+```bash
+crontab -e
+# Add the following line to back up daily at 2:00 AM:
+0 2 * * * docker compose -f /opt/app/docker-compose.yml exec -T mysql mysqldump -u root -pYOUR_PASSWORD production_db | gzip > /opt/backups/db_$(date +\%F).sql.gz
 ```
 
 ---
@@ -347,9 +499,8 @@ You can execute all commands directly from the root project folder:
 
 | Script | Command | Purpose |
 |---|---|---|
-| `npm run dev` | `node scripts/dev.js` | Concurrently runs backend nodemon and frontend Vite dev servers |
-| `npm run dev:backend` | `npm run dev --workspace=backend` | Runs only the Express API in dev mode with reload |
-| `npm run dev:frontend` | `npm run dev --workspace=frontend` | Runs only the Vite frontend dev server |
+| `npm run dev:backend` | `npm run dev --workspace=backend` | Runs Express API locally in dev mode with hot reload |
+| `npm run dev:frontend` | `npm run dev --workspace=frontend` | Runs Vite frontend dev server locally with instant HMR |
 | `npm run build` | `npm run build --workspace=frontend` | Builds the frontend for production into `frontend/dist` |
 | `npm run start` | `npm run start --workspace=backend` | Starts the Express API in standard production mode |
 | `npm run db:push` | `npm run db:push --workspace=backend` | Syncs schema changes directly to MySQL database (host) |
@@ -357,15 +508,15 @@ You can execute all commands directly from the root project folder:
 | `npm run db:migrate` | `npm run db:migrate --workspace=backend` | Applies pending SQL migrations (host) |
 | `npm run db:studio` | `npm run db:studio --workspace=backend` | Starts visual Drizzle Studio database UI (host) |
 | `npm run db:check` | `npm run db:check --workspace=backend` | Validates Drizzle migrations against schema (host) |
-| `npm run docker:up` | `docker compose up -d --build` | Builds & starts all services containerized |
+| `npm run docker:up` | `docker compose up -d --build` | Builds & starts all services containerized in 1 command |
 | `npm run docker:down`| `docker compose down` | Stops and tears down containerized services |
 | `npm run docker:logs`| `docker compose logs -f` | Streams output logs from Docker containers |
 | `npm run docker:db`  | `docker compose up -d mysql` | Starts only MySQL container for local development |
-| `npm run docker:db:push` | `docker compose exec backend npm run db:push` | Pushes schema to MySQL inside Docker Compose |
-| `npm run docker:db:migrate` | `docker compose exec backend npm run db:migrate` | Applies migrations to MySQL inside Docker Compose |
-| `npm run docker:db:generate`| `docker compose exec backend npm run db:generate` | Generates migrations inside Docker Compose |
-| `npm run docker:db:check`   | `docker compose exec backend npm run db:check` | Validates schema inside Docker Compose |
-| `npm run docker:sh`  | `docker compose exec backend sh` | Opens interactive shell inside backend container |
+| `npm run docker:db:push` | `node scripts/docker-db.js push` | Pushes schema to MySQL inside Docker Compose |
+| `npm run docker:db:migrate` | `node scripts/docker-db.js migrate` | Applies migrations to MySQL inside Docker Compose |
+| `npm run docker:db:generate`| `node scripts/docker-db.js generate` | Generates migrations inside Docker Compose |
+| `npm run docker:db:check`   | `node scripts/docker-db.js check` | Validates schema inside Docker Compose |
+| `npm run docker:sh`  | `node scripts/docker-db.js sh` | Opens interactive shell inside backend container |
 
 ---
 
@@ -381,21 +532,21 @@ You can execute all commands directly from the root project folder:
   BACKEND_PORT=3001
   FRONTEND_PORT=5174
   ```
-- Restart the servers (`npm run dev`). The Vite dev proxy and Express CORS will automatically rebind to the new ports.
+- Restart the servers (`npm run dev:backend` / `npm run dev:frontend` or `npm run docker:up`). The Vite dev proxy and Express CORS will automatically rebind to the new ports.
 
 ### 3. CORS Error in Browser Console
 - The backend automatically permits `http://localhost:${FRONTEND_PORT}` and `http://127.0.0.1:${FRONTEND_PORT}`.
 - If you access the frontend using a custom domain or IP (e.g. `http://192.168.1.50:5173`), set `CORS_ORIGIN=http://192.168.1.50:5173` or `CORS_ORIGIN=*` in `.env`.
 
-### 4. Running Backend and Frontend in Separate Terminals
-If you prefer running services in separate terminal tabs instead of `npm run dev`:
-- **Terminal 1 (Backend):**
+### 4. Running Backend and Frontend Locally
+For local development outside Docker, run each service in its own terminal tab from the root:
+- **Terminal 1 (Backend API):**
   ```bash
-  cd backend && npm run dev
+  npm run dev:backend
   ```
-- **Terminal 2 (Frontend):**
+- **Terminal 2 (Frontend SPA):**
   ```bash
-  cd frontend && npm run dev
+  npm run dev:frontend
   ```
 
 ---

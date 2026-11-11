@@ -11,8 +11,10 @@ COPY drizzle.config.js ./
 COPY drizzle/ ./drizzle/
 COPY src/ ./src/
 
-# Expose backend port (configured via BACKEND_PORT from .env)
+# Build arguments from .env
 ARG BACKEND_PORT=3000
+ARG PROJECT_NAME=fullstack
+ENV PROJECT_NAME=$PROJECT_NAME
 EXPOSE ${BACKEND_PORT}
 
 # Start Express server

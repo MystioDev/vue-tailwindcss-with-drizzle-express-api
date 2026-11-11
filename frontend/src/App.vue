@@ -8,6 +8,7 @@ export default {
   name: 'App',
   data() {
     return {
+      projectName: import.meta.env.PROJECT_NAME || 'Full-Stack',
       features: [
         {
           title: 'Simplified Single .env',
@@ -56,7 +57,7 @@ export default {
         </span>
         <div class="flex flex-col">
           <span class="text-sm font-bold sm:text-base">Vue + Express + Drizzle</span>
-          <span class="font-mono text-[10px] text-slate-400">Full-Stack Starter</span>
+          <span class="font-mono text-[10px] text-slate-400 capitalize">{{ projectName }} Starter</span>
         </div>
       </div>
       <nav aria-label="Documentation links" class="flex flex-wrap items-center gap-3 text-xs font-medium sm:gap-5 sm:text-sm text-slate-600 dark:text-slate-400">
@@ -147,8 +148,8 @@ export default {
 
         <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 font-mono text-xs">
           <div class="rounded-xl bg-slate-800/80 p-3.5 border border-slate-700/60">
-            <span class="text-emerald-400 font-semibold">npm run dev</span>
-            <p class="mt-1 text-slate-400">Starts both Express API and Vite frontend concurrently</p>
+            <span class="text-emerald-400 font-semibold">npm run dev:backend / dev:frontend</span>
+            <p class="mt-1 text-slate-400">Runs API or Vite locally (or run docker:up to start all in 1 command)</p>
           </div>
           <div class="rounded-xl bg-slate-800/80 p-3.5 border border-slate-700/60">
             <span class="text-sky-400 font-semibold">npm run db:push</span>

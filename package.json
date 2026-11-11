@@ -8,7 +8,6 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "node scripts/dev.js",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "build": "npm run build --workspace=frontend",
@@ -23,13 +22,14 @@
     "db:check": "npm run db:check --workspace=backend",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
+    "docker:stop": "docker compose stop",
     "docker:logs": "docker compose logs -f",
     "docker:db": "docker compose up -d mysql",
-    "docker:db:push": "docker compose exec backend npm run db:push",
-    "docker:db:migrate": "docker compose exec backend npm run db:migrate",
-    "docker:db:generate": "docker compose exec backend npm run db:generate",
-    "docker:db:check": "docker compose exec backend npm run db:check",
-    "docker:sh": "docker compose exec backend sh"
+    "docker:db:push": "node scripts/docker-db.js push",
+    "docker:db:migrate": "node scripts/docker-db.js migrate",
+    "docker:db:generate": "node scripts/docker-db.js generate",
+    "docker:db:check": "node scripts/docker-db.js check",
+    "docker:sh": "node scripts/docker-db.js sh"
   },
   "keywords": [
     "vue",
@@ -42,6 +42,6 @@
     "fullstack",
     "template"
   ],
-  "author": "",
+  "author": "MystioDev",
   "license": "ISC"
 }

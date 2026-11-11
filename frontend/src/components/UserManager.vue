@@ -218,7 +218,7 @@ export default {
     <div v-if="apiStatus === 'offline'" class="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
       <p class="font-semibold">Backend server is not reachable on port {{ backendPort }}.</p>
       <p class="mt-1">
-        Start both services with <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">npm run dev</code> from the project root, or check your <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">BACKEND_PORT</code> in <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">.env</code>.
+        Start the backend with <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">npm run dev:backend</code> (or start everything with <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">npm run docker:up</code>), and verify your <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">BACKEND_PORT</code> in <code class="rounded bg-amber-500/20 px-1 py-0.5 font-mono">.env</code>.
       </p>
     </div>
 

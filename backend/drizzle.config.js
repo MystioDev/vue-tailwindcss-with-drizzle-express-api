@@ -6,7 +6,10 @@ const { defineConfig } = require("drizzle-kit");
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 dotenv.config();
 
-const dbHost = process.env.DB_HOST || "localhost";
+const projectName = process.env.PROJECT_NAME || "fullstack";
+const defaultHost =
+  process.env.NODE_ENV === "production" ? `${projectName}-mysql` : "localhost";
+const dbHost = process.env.DB_HOST || defaultHost;
 const dbPort = process.env.DB_PORT || 3306;
 const dbUser = process.env.DB_USER || "root";
 const dbPass = process.env.DB_PASSWORD || "password";

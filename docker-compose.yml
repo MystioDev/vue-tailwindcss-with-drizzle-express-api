@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: fullstack-mysql
+    container_name: ${PROJECT_NAME:-fullstack}-mysql
     restart: unless-stopped
     env_file: .env
     environment:
@@ -12,7 +12,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -21,7 +21,8 @@ services:
       app-network:
         aliases:
           - mysql
-          - fullstack-mysql
+          - ${PROJECT_NAME:-fullstack}-mysql
+          - db
 
   backend:
     build:
@@ -29,7 +30,8 @@ services:
       dockerfile: Dockerfile
       args:
         BACKEND_PORT: ${BACKEND_PORT}
-    container_name: fullstack-backend
+        PROJECT_NAME: ${PROJECT_NAME:-fullstack}
+    container_name: ${PROJECT_NAME:-fullstack}-backend
     restart: unless-stopped
     depends_on:
       mysql:
@@ -38,7 +40,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${BACKEND_PORT}
-      DB_HOST: mysql
+      PROJECT_NAME: ${PROJECT_NAME:-fullstack}
+      DB_HOST: ${PROJECT_NAME:-fullstack}-mysql
       DB_PORT: 3306
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
@@ -46,7 +49,8 @@ services:
       app-network:
         aliases:
           - backend
-          - fullstack-backend
+          - ${PROJECT_NAME:-fullstack}-backend
+          - api
 
   frontend:
     build:
@@ -55,20 +59,22 @@ services:
       args:
         BACKEND_PORT: ${BACKEND_PORT}
         FRONTEND_PORT: ${FRONTEND_PORT}
-    container_name: fullstack-frontend
+        PROJECT_NAME: ${PROJECT_NAME:-fullstack}
+    container_name: ${PROJECT_NAME:-fullstack}-frontend
     restart: unless-stopped
     depends_on:
       - backend
     env_file: .env
     environment:
       BACKEND_PORT: ${BACKEND_PORT}
+      PROJECT_NAME: ${PROJECT_NAME:-fullstack}
     ports:
       - "${FRONTEND_PORT}:80"
     networks:
       app-network:
         aliases:
           - frontend
-          - fullstack-frontend
+          - ${PROJECT_NAME:-fullstack}-frontend
 
 volumes:
   mysql_data:

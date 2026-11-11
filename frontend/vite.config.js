@@ -10,12 +10,14 @@ export default defineConfig(({ mode }) => {
   const localEnv = loadEnv(mode, process.cwd(), '')
   const env = { ...rootEnv, ...localEnv, ...process.env }
 
+  const projectName = env.PROJECT_NAME || 'fullstack'
   const frontendPort = parseInt(env.FRONTEND_PORT || '5173', 10)
   const backendPort = parseInt(env.BACKEND_PORT || '3000', 10)
 
   return {
     envDir: '../',
     define: {
+      'import.meta.env.PROJECT_NAME': JSON.stringify(projectName),
       'import.meta.env.BACKEND_PORT': JSON.stringify(backendPort),
       'import.meta.env.FRONTEND_PORT': JSON.stringify(frontendPort),
     },
