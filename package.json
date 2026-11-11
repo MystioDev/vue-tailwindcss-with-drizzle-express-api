@@ -24,7 +24,12 @@
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "docker:db": "docker compose up -d mysql"
+    "docker:db": "docker compose up -d mysql",
+    "docker:db:push": "docker compose exec backend npm run db:push",
+    "docker:db:migrate": "docker compose exec backend npm run db:migrate",
+    "docker:db:generate": "docker compose exec backend npm run db:generate",
+    "docker:db:check": "docker compose exec backend npm run db:check",
+    "docker:sh": "docker compose exec backend sh"
   },
   "keywords": [
     "vue",

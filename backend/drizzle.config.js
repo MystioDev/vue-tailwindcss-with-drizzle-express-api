@@ -6,9 +6,15 @@ const { defineConfig } = require("drizzle-kit");
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 dotenv.config();
 
+const dbHost = process.env.DB_HOST || "localhost";
+const dbPort = process.env.DB_PORT || 3306;
+const dbUser = process.env.DB_USER || "root";
+const dbPass = process.env.DB_PASSWORD || "password";
+const dbName = process.env.DB_NAME || "express_drizzle_db";
+
 const dbUrl =
   process.env.DATABASE_URL ||
-  `mysql://${process.env.DB_USER || "root"}:${process.env.DB_PASSWORD || "password"}@${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME || "express_drizzle_db"}`;
+  `mysql://${dbUser}:${dbPass}@${dbHost}:${dbPort}/${dbName}`;
 
 module.exports = defineConfig({
   schema: "./src/db/schema.js",
@@ -18,4 +24,3 @@ module.exports = defineConfig({
     url: dbUrl,
   },
 });
-

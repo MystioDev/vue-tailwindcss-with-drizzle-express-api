@@ -11,8 +11,9 @@ COPY drizzle.config.js ./
 COPY drizzle/ ./drizzle/
 COPY src/ ./src/
 
-# Expose backend port
-EXPOSE 3000
+# Expose backend port (configured via BACKEND_PORT from .env)
+ARG BACKEND_PORT=3000
+EXPOSE ${BACKEND_PORT}
 
 # Start Express server
 CMD ["npm", "start"]

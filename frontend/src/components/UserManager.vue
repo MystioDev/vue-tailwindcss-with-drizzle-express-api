@@ -1,141 +1,3 @@
-<script setup>
-import { ref, onMounted } from 'vue'
-
-const backendPort = import.meta.env.BACKEND_PORT || 3000
-const frontendPort = import.meta.env.FRONTEND_PORT || 5173
-const apiUrl = import.meta.env.VITE_API_URL || ''
-
-const apiStatus = ref('checking') // 'online' | 'offline' | 'checking'
-const apiHealth = ref(null)
-const users = ref([])
-const loading = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
-
-const newUser = ref({ name: '', email: '' })
-const editingUser = ref(null)
-
-const checkHealth = async () => {
-  try {
-    const res = await fetch('/api/health')
-    if (res.ok) {
-      apiHealth.value = await res.json()
-      apiStatus.value = 'online'
-      fetchUsers()
-    } else {
-      apiStatus.value = 'offline'
-    }
-  } catch (err) {
-    apiStatus.value = 'offline'
-    console.error('Health check failed:', err)
-  }
-}
-
-const fetchUsers = async () => {
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const res = await fetch('/api/users')
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.error || `HTTP error ${res.status}`)
-    }
-    users.value = await res.json()
-  } catch (err) {
-    errorMessage.value = `Unable to fetch users: ${err.message}. If the database is not started, run 'npm run docker:db' or start your MySQL instance and run 'npm run db:push'.`
-  } finally {
-    loading.value = false
-  }
-}
-
-const createUser = async () => {
-  if (!newUser.value.email) return
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  try {
-    const res = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newUser.value),
-    })
-
-    const data = await res.json()
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to create user')
-    }
-
-    successMessage.value = 'User created successfully!'
-    newUser.value = { name: '', email: '' }
-    await fetchUsers()
-  } catch (err) {
-    errorMessage.value = err.message
-  }
-}
-
-const startEdit = (user) => {
-  editingUser.value = { ...user }
-}
-
-const cancelEdit = () => {
-  editingUser.value = null
-}
-
-const updateUser = async () => {
-  if (!editingUser.value) return
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  try {
-    const res = await fetch(`/api/users/${editingUser.value.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: editingUser.value.name,
-        email: editingUser.value.email,
-      }),
-    })
-
-    const data = await res.json()
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to update user')
-    }
-
-    successMessage.value = 'User updated successfully!'
-    editingUser.value = null
-    await fetchUsers()
-  } catch (err) {
-    errorMessage.value = err.message
-  }
-}
-
-const deleteUser = async (id) => {
-  if (!confirm('Are you sure you want to delete this user?')) return
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  try {
-    const res = await fetch(`/api/users/${id}`, {
-      method: 'DELETE',
-    })
-
-    const data = await res.json()
-    if (!res.ok) {
-      throw new Error(data.error || 'Failed to delete user')
-    }
-
-    successMessage.value = 'User deleted successfully!'
-    await fetchUsers()
-  } catch (err) {
-    errorMessage.value = err.message
-  }
-}
-
-onMounted(() => {
-  checkHealth()
-})
-</script>
-
 <template>
   <div id="users-section" class="w-full rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-900/90">
     <!-- Header / Stack Diagnostic Bar -->
@@ -169,7 +31,7 @@ onMounted(() => {
           </span>
         </div>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Vue frontend talking to Express API and Drizzle ORM over configured ports.
+          Vue frontend (Options API) talking to Express API and Drizzle ORM over synchronized ports.
         </p>
       </div>
 
@@ -252,7 +114,7 @@ onMounted(() => {
 
             <button
               type="submit"
-              :disabled="!newUser.email || loading"
+              :disabled="!isFormValid || loading"
               class="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Add User to MySQL
@@ -265,7 +127,7 @@ onMounted(() => {
       <div class="lg:col-span-3">
         <div class="flex items-center justify-between">
           <h3 class="text-base font-semibold text-slate-900 dark:text-white">
-            MySQL Users ({{ users.length }})
+            MySQL Users ({{ userCount }})
           </h3>
           <button
             type="button"
@@ -277,13 +139,13 @@ onMounted(() => {
         </div>
 
         <!-- Loading Skeleton -->
-        <div v-if="loading && users.length === 0" class="mt-4 space-y-3">
+        <div v-if="loading && userCount === 0" class="mt-4 space-y-3">
           <div v-for="i in 3" :key="i" class="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"></div>
         </div>
 
         <!-- Empty State -->
         <div
-          v-else-if="users.length === 0"
+          v-else-if="userCount === 0"
           class="mt-4 rounded-2xl border border-dashed border-slate-200 p-8 text-center dark:border-slate-800"
         >
           <div class="mx-auto flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">
@@ -291,11 +153,11 @@ onMounted(() => {
           </div>
           <p class="mt-3 text-sm font-medium text-slate-900 dark:text-white">No users found</p>
           <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Add a new user using the form on the left, or run database seed/migrations.
+            Add a new user using the form on the left, or run database migrations.
           </p>
         </div>
 
-        <!-- Users Table/Cards -->
+        <!-- Users Cards -->
         <div v-else class="mt-4 space-y-3">
           <div
             v-for="user in users"
@@ -372,3 +234,150 @@ onMounted(() => {
   </div>
 </template>
 
+<script>
+export default {
+  name: 'UserManager',
+  data() {
+    return {
+      backendPort: import.meta.env.BACKEND_PORT || 3000,
+      frontendPort: import.meta.env.FRONTEND_PORT || 5173,
+      apiStatus: 'checking', // 'online' | 'offline' | 'checking'
+      apiHealth: null,
+      users: [],
+      loading: false,
+      errorMessage: '',
+      successMessage: '',
+      newUser: {
+        name: '',
+        email: '',
+      },
+      editingUser: null,
+    }
+  },
+  computed: {
+    userCount() {
+      return this.users.length
+    },
+    isFormValid() {
+      return Boolean(this.newUser.email && this.newUser.email.trim())
+    },
+    isOnline() {
+      return this.apiStatus === 'online'
+    },
+  },
+  mounted() {
+    this.checkHealth()
+  },
+  methods: {
+    async checkHealth() {
+      try {
+        const res = await fetch('/api/health')
+        if (res.ok) {
+          this.apiHealth = await res.json()
+          this.apiStatus = 'online'
+          this.fetchUsers()
+        } else {
+          this.apiStatus = 'offline'
+        }
+      } catch (err) {
+        this.apiStatus = 'offline'
+        console.error('Health check failed:', err)
+      }
+    },
+    async fetchUsers() {
+      this.loading = true
+      this.errorMessage = ''
+      try {
+        const res = await fetch('/api/users')
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || `HTTP error ${res.status}`)
+        }
+        this.users = await res.json()
+      } catch (err) {
+        this.errorMessage = `Unable to fetch users: ${err.message}. If MySQL is not running, run 'npm run docker:db' or start your MySQL instance and run 'npm run db:push'.`
+      } finally {
+        this.loading = false
+      }
+    },
+    async createUser() {
+      if (!this.isFormValid) return
+      this.errorMessage = ''
+      this.successMessage = ''
+
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.newUser),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to create user')
+        }
+
+        this.successMessage = 'User created successfully!'
+        this.newUser = { name: '', email: '' }
+        await this.fetchUsers()
+      } catch (err) {
+        this.errorMessage = err.message
+      }
+    },
+    startEdit(user) {
+      this.editingUser = { ...user }
+    },
+    cancelEdit() {
+      this.editingUser = null
+    },
+    async updateUser() {
+      if (!this.editingUser) return
+      this.errorMessage = ''
+      this.successMessage = ''
+
+      try {
+        const res = await fetch(`/api/users/${this.editingUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: this.editingUser.name,
+            email: this.editingUser.email,
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to update user')
+        }
+
+        this.successMessage = 'User updated successfully!'
+        this.editingUser = null
+        await this.fetchUsers()
+      } catch (err) {
+        this.errorMessage = err.message
+      }
+    },
+    async deleteUser(id) {
+      if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to delete this user?')) return
+      this.errorMessage = ''
+      this.successMessage = ''
+
+      try {
+        const res = await fetch(`/api/users/${id}`, {
+          method: 'DELETE',
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to delete user')
+        }
+
+        this.successMessage = 'User deleted successfully!'
+        await this.fetchUsers()
+      } catch (err) {
+        this.errorMessage = err.message
+      }
+    },
+  },
+}
+</script>

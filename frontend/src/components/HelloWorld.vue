@@ -1,25 +1,8 @@
-<script setup>
-import { ref } from 'vue'
-
-defineProps({
-  title: {
-    type: String,
-    required: true,
-  },
-  subtitle: {
-    type: String,
-    default: '',
-  },
-})
-
-const count = ref(0)
-</script>
-
 <template>
   <section class="mx-auto max-w-3xl text-center">
     <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
       <span class="size-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
-      Full-Stack: Vue 3 + Tailwind CSS v4 + Express 5 + Drizzle + MySQL
+      Full-Stack: Vue 3 (Options API) + Tailwind v4 + Express 5 + Drizzle + MySQL
     </div>
 
     <h1 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white">
@@ -34,7 +17,7 @@ const count = ref(0)
       <button
         type="button"
         class="inline-flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 active:scale-[0.99]"
-        @click="count++"
+        @click="incrementCount"
       >
         Reactive State Counter: {{ count }}
       </button>
@@ -49,3 +32,28 @@ const count = ref(0)
   </section>
 </template>
 
+<script>
+export default {
+  name: 'HelloWorld',
+  props: {
+    title: {
+      type: String,
+      required: true,
+    },
+    subtitle: {
+      type: String,
+      default: '',
+    },
+  },
+  data() {
+    return {
+      count: 0,
+    }
+  },
+  methods: {
+    incrementCount() {
+      this.count++
+    },
+  },
+}
+</script>

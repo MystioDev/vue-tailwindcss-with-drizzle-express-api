@@ -4,6 +4,7 @@ const express = require("express");
 
 // Load shared .env from project root, with optional local fallback
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 dotenv.config();
 
 const usersRouter = require("./routes/users");
@@ -12,12 +13,11 @@ const app = express();
 const PORT = process.env.BACKEND_PORT || process.env.PORT || 3000;
 const FRONTEND_PORT = process.env.FRONTEND_PORT || 5173;
 
-// Configure allowed CORS origins
+// Configure allowed CORS origins dynamically based on FRONTEND_PORT
 const allowedOrigins = [
   `http://localhost:${FRONTEND_PORT}`,
   `http://127.0.0.1:${FRONTEND_PORT}`,
   process.env.CORS_ORIGIN,
-  process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 // CORS middleware setup (supports both npm cors package and native middleware)
@@ -92,4 +92,3 @@ app.listen(PORT, () => {
   console.log(`🩺 Health check: http://localhost:${PORT}/api/health`);
   console.log(`==============================================`);
 });
-

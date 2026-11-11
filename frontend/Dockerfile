@@ -7,23 +7,29 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy source code and configuration
+# Build arguments from .env
+ARG BACKEND_PORT=3000
+ARG FRONTEND_PORT=5173
+ENV BACKEND_PORT=$BACKEND_PORT
+ENV FRONTEND_PORT=$FRONTEND_PORT
+
+# Copy source code and build
 COPY . .
-
-# Optional build arg for API URL
-ARG VITE_API_URL=""
-ENV VITE_API_URL=$VITE_API_URL
-
-# Build production bundle
 RUN npm run build
 
 # Stage 2: Serve static production assets with Nginx
 FROM nginx:alpine AS production-stage
 
 COPY --from=build-stage /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Nginx 1.19+ automatically runs envsubst on /etc/nginx/templates/*.template
+# and outputs the substituted config to /etc/nginx/conf.d/
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Backend port env var and envsubst filter for template substitution
+ENV BACKEND_PORT=3000
+ENV NGINX_ENVSUBST_FILTER=BACKEND_PORT
 
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
-

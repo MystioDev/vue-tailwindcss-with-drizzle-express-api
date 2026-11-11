@@ -33,7 +33,7 @@ Designed from the ground up with a **shared root `.env` configuration**, **bidir
 
 ## ✨ Key Features
 
-- **Frontend (Vue 3.5+ & Vite 6):** Modern Composition API (`<script setup>`), Single-File Components, instant Hot Module Replacement (HMR), and fast production bundling.
+- **Frontend (Vue 3.5+ & Vite 6):** Vue's classic, beginner-friendly **Options API** (`data`, `methods`, `computed`, `mounted`, `props`), Single-File Components, instant Hot Module Replacement (HMR), and fast production bundling.
 - **Tailwind CSS v4:** Zero-config CSS-first architecture powered by `@tailwindcss/vite`, supporting both dark and light modes out of the box.
 - **Backend (Express 5):** Express 5 REST API with robust JSON parsing, health check endpoints, modular routing, and error handling.
 - **Drizzle ORM & MySQL 8:** Type-safe database queries and schema definitions, fast connection pooling via `mysql2`, automatic schema syncing (`db:push`), migration tooling (`db:generate` & `db:migrate`), and visual database management with **Drizzle Studio**.
@@ -260,7 +260,7 @@ curl http://localhost:3000/api/users
 
 ## 🎨 Frontend Development (Vue 3 + Tailwind v4)
 
-- **Vue Single-File Components:** Components are built with Vue 3's `<script setup>` syntax for minimal boilerplate and TypeScript/JavaScript clarity.
+- **Vue Single-File Components:** Components are built with Vue's classic, structured **Options API** (`data`, `methods`, `computed`, `mounted`, `props`) for clear separation of concerns, high readability, and beginner-friendly state management.
 - **Tailwind CSS v4:** Zero-config CSS setup configured directly in [`frontend/src/style.css`](frontend/src/style.css):
   ```css
   @import "tailwindcss";
@@ -293,12 +293,34 @@ Access the containerized application at:
 - **Frontend App:** [http://localhost:5173](http://localhost:5173) (or your configured `FRONTEND_PORT`)
 - **Backend API:** [http://localhost:3000](http://localhost:3000) (or your configured `BACKEND_PORT`)
 
-### 2. Run Database Migrations Inside Docker
+### 2. Run Database Commands While Using Docker Compose
 
-When starting a fresh Docker container volume, push the schema to the containerized database:
+When running the full Docker Compose stack (`npm run docker:up`), you have two simple ways to run Drizzle database commands:
 
+#### Option A: Simple One-Line Docker Scripts (Runs inside the backend container)
 ```bash
-docker compose exec backend npm run db:push
+# Push schema directly to the containerized database
+npm run docker:db:push
+
+# Run pending SQL migrations inside Docker
+npm run docker:db:migrate
+
+# Generate new migration files inside Docker
+npm run docker:db:generate
+
+# Check schema and migrations inside Docker
+npm run docker:db:check
+
+# Open an interactive shell inside the backend container
+npm run docker:sh
+```
+
+#### Option B: Direct Host Commands (Connects via exposed MySQL port)
+Because `docker-compose.yml` maps `${DB_PORT}:3306` to `localhost:3306`, your host Drizzle commands also work seamlessly against the Docker database:
+```bash
+npm run db:push
+npm run db:migrate
+npm run db:studio   # Opens Drizzle Studio in your host web browser!
 ```
 
 ### 3. Useful Docker Commands
@@ -330,15 +352,20 @@ You can execute all commands directly from the root project folder:
 | `npm run dev:frontend` | `npm run dev --workspace=frontend` | Runs only the Vite frontend dev server |
 | `npm run build` | `npm run build --workspace=frontend` | Builds the frontend for production into `frontend/dist` |
 | `npm run start` | `npm run start --workspace=backend` | Starts the Express API in standard production mode |
-| `npm run db:push` | `npm run db:push --workspace=backend` | Syncs schema changes directly to MySQL database |
-| `npm run db:generate` | `npm run db:generate --workspace=backend` | Generates SQL migration files from schema |
-| `npm run db:migrate` | `npm run db:migrate --workspace=backend` | Applies pending SQL migrations |
-| `npm run db:studio` | `npm run db:studio --workspace=backend` | Starts visual Drizzle Studio database UI |
-| `npm run db:check` | `npm run db:check --workspace=backend` | Validates Drizzle migrations against schema |
+| `npm run db:push` | `npm run db:push --workspace=backend` | Syncs schema changes directly to MySQL database (host) |
+| `npm run db:generate` | `npm run db:generate --workspace=backend` | Generates SQL migration files from schema (host) |
+| `npm run db:migrate` | `npm run db:migrate --workspace=backend` | Applies pending SQL migrations (host) |
+| `npm run db:studio` | `npm run db:studio --workspace=backend` | Starts visual Drizzle Studio database UI (host) |
+| `npm run db:check` | `npm run db:check --workspace=backend` | Validates Drizzle migrations against schema (host) |
 | `npm run docker:up` | `docker compose up -d --build` | Builds & starts all services containerized |
 | `npm run docker:down`| `docker compose down` | Stops and tears down containerized services |
 | `npm run docker:logs`| `docker compose logs -f` | Streams output logs from Docker containers |
 | `npm run docker:db`  | `docker compose up -d mysql` | Starts only MySQL container for local development |
+| `npm run docker:db:push` | `docker compose exec backend npm run db:push` | Pushes schema to MySQL inside Docker Compose |
+| `npm run docker:db:migrate` | `docker compose exec backend npm run db:migrate` | Applies migrations to MySQL inside Docker Compose |
+| `npm run docker:db:generate`| `docker compose exec backend npm run db:generate` | Generates migrations inside Docker Compose |
+| `npm run docker:db:check`   | `docker compose exec backend npm run db:check` | Validates schema inside Docker Compose |
+| `npm run docker:sh`  | `docker compose exec backend sh` | Opens interactive shell inside backend container |
 
 ---
 

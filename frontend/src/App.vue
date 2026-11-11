@@ -1,41 +1,3 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import UserManager from './components/UserManager.vue'
-
-const features = [
-  {
-    title: 'Shared Root .env',
-    description: 'A single unified environment configuration drives Vite, Express API, Drizzle ORM, and Docker Compose without duplicate files.',
-    badge: 'Zero-Duplication Config',
-  },
-  {
-    title: 'Bidirectional Port Pairing',
-    description: 'Frontend Vite proxy routes to Express BACKEND_PORT, while Express CORS automatically authorizes FRONTEND_PORT.',
-    badge: 'Seamless Dev Proxy & CORS',
-  },
-  {
-    title: 'Drizzle ORM & MySQL',
-    description: 'Type-safe SQL schema, automatic migrations, connection pooling with mysql2, and Drizzle Studio support out of the box.',
-    badge: 'Drizzle v0.45+',
-  },
-  {
-    title: 'Vue 3 + Tailwind CSS v4',
-    description: 'Composition API (<script setup>) paired with zero-config CSS-first styling powered by @tailwindcss/vite.',
-    badge: 'Modern UI Stack',
-  },
-  {
-    title: 'Express 5 REST API',
-    description: 'Modern Express 5 routing, automated JSON parsing, error handling, and ready-to-use CRUD endpoints for resources.',
-    badge: 'Express v5',
-  },
-  {
-    title: 'Optional Docker Compose',
-    description: 'Spin up the entire stack (MySQL, Express API, and Nginx Vue SPA) or just the database with a single command.',
-    badge: 'Docker Ready',
-  },
-]
-</script>
-
 <template>
   <div class="flex min-h-dvh flex-col justify-between px-6 py-10 sm:px-8 lg:px-12">
     <!-- Navigation Header -->
@@ -56,7 +18,7 @@ const features = [
           rel="noopener noreferrer"
           class="hover:text-emerald-600 dark:hover:text-emerald-400"
         >
-          Vue
+          Vue (Options API)
         </a>
         <a
           href="https://tailwindcss.com"
@@ -90,7 +52,7 @@ const features = [
       <!-- Hero Section -->
       <HelloWorld
         title="Full-Stack Web Starter Template"
-        subtitle="A unified starter repository combining Vue 3 and Tailwind CSS v4 on the frontend with Express 5, Drizzle ORM, and MySQL on the backend."
+        subtitle="A unified starter repository combining Vue 3 (Options API) and Tailwind CSS v4 on the frontend with Express 5, Drizzle ORM, and MySQL on the backend."
       />
 
       <!-- Interactive CRUD Demo Section -->
@@ -103,7 +65,7 @@ const features = [
             Architected for Rapid Full-Stack Development
           </h2>
           <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Carefully tuned for developer experience, shared configuration, and containerized deployment.
+            A single, simplified .env configuration synchronizes the entire application across local development and Docker.
           </p>
         </div>
 
@@ -157,8 +119,8 @@ const features = [
             <p class="mt-1 text-slate-400">Builds & runs entire stack (MySQL + API + Web) containerized</p>
           </div>
           <div class="rounded-xl bg-slate-800/80 p-3.5 border border-slate-700/60">
-            <span class="text-teal-400 font-semibold">npm run build</span>
-            <p class="mt-1 text-slate-400">Produces optimized production build of the Vue frontend</p>
+            <span class="text-teal-400 font-semibold">npm run docker:db:push</span>
+            <p class="mt-1 text-slate-400">Pushes Drizzle schema inside running Docker containers</p>
           </div>
         </div>
       </section>
@@ -166,8 +128,56 @@ const features = [
 
     <!-- Footer -->
     <footer class="mx-auto w-full max-w-6xl border-t border-slate-200/80 pt-6 text-center text-xs text-slate-500 dark:border-slate-800/80 dark:text-slate-400">
-      <p>Full-Stack Starter Template &bull; Vue 3, Tailwind CSS v4, Express 5, Drizzle ORM &amp; MySQL. Customize freely.</p>
+      <p>Full-Stack Starter Template &bull; Vue 3 (Options API), Tailwind CSS v4, Express 5, Drizzle ORM &amp; MySQL. Customize freely.</p>
     </footer>
   </div>
 </template>
 
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+import UserManager from './components/UserManager.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld,
+    UserManager,
+  },
+  data() {
+    return {
+      features: [
+        {
+          title: 'Simplified Single .env',
+          description: 'A minimal 7-line environment file syncs ports and database configuration across Vite, Express, Drizzle, and Docker.',
+          badge: 'Unified Config',
+        },
+        {
+          title: 'Bidirectional Port Pairing',
+          description: 'Frontend dev proxy syncs to BACKEND_PORT, while Express CORS automatically authorizes FRONTEND_PORT.',
+          badge: 'Auto-Synced Ports',
+        },
+        {
+          title: 'Vue 3 Options API',
+          description: 'Classic, familiar Options API (data, methods, mounted, props) combined with Tailwind CSS v4 styling.',
+          badge: 'Options API',
+        },
+        {
+          title: 'Drizzle ORM & MySQL',
+          description: 'Type-safe SQL schemas, automatic migrations, connection pooling via mysql2, and Drizzle Studio support.',
+          badge: 'Drizzle ORM',
+        },
+        {
+          title: 'Express 5 REST API',
+          description: 'Clean REST API routing, dynamic CORS resolution from FRONTEND_PORT, JSON handling, and health check endpoints.',
+          badge: 'Express v5',
+        },
+        {
+          title: 'Zero-Config Docker Compose',
+          description: 'Every container reads the exact same root .env file, with automatic Nginx proxy templating and MySQL healthchecks.',
+          badge: 'Docker Ready',
+        },
+      ],
+    }
+  },
+}
+</script>

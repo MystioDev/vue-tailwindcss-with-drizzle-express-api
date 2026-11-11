@@ -5,27 +5,27 @@ import path from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load environment variables from the root shared .env file
-  const env = loadEnv(mode, path.resolve(__dirname, '..'), '')
+  // Load environment variables from the shared root .env file, local env, and process.env
+  const rootEnv = loadEnv(mode, path.resolve(__dirname, '..'), '')
+  const localEnv = loadEnv(mode, process.cwd(), '')
+  const env = { ...rootEnv, ...localEnv, ...process.env }
 
   const frontendPort = parseInt(env.FRONTEND_PORT || '5173', 10)
-  const backendPort = parseInt(env.BACKEND_PORT || env.PORT || '3000', 10)
-  const backendUrl = env.VITE_API_URL || `http://localhost:${backendPort}`
+  const backendPort = parseInt(env.BACKEND_PORT || '3000', 10)
 
   return {
     envDir: '../',
     define: {
       'import.meta.env.BACKEND_PORT': JSON.stringify(backendPort),
       'import.meta.env.FRONTEND_PORT': JSON.stringify(frontendPort),
-      'import.meta.env.VITE_API_URL': JSON.stringify(backendUrl),
     },
     server: {
       port: frontendPort,
       host: true,
       proxy: {
-        // Automatically proxies all /api calls to the Express backend port
+        // Automatically proxies /api requests to Express backend port
         '/api': {
-          target: backendUrl,
+          target: `http://localhost:${backendPort}`,
           changeOrigin: true,
         },
       },
@@ -36,4 +36,3 @@ export default defineConfig(({ mode }) => {
     ],
   }
 })
-
